@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<body onkeydown="keyEvent(event)">
+    <div style="display: flex;">
+        <div>   
+            <p>Sua pontuação é: </p>
+            <p id="pontuacao" style="font-size: 50px;">0</p>
+        </div>
+        <div style="margin-left: 50px;">
+            <p>Qtd notas erradas</p>
+            <p id="erros" style="font-size: 50px;">0</p>
+        </div>
+    </div>
+
+    <div style="position: relative;">
+        <canvas id="board" width="700" height="700" 
+          style="position: absolute; left: 0; top: 0; z-index: 0;  border: 1px solid black"></canvas>
+        <canvas id="myCanvas" width="700" height="700" 
+          style="position: absolute; left: 0; top: 0; z-index: 1; border: 1px solid black"></canvas>
+    </div>
+    
+</body>
+
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+
+    var c2 = document.getElementById("board");
+    var ctx2 = c2.getContext("2d");
+
+    var score = 0;
+    var mistake = 0;
+     
+    var larguraM = 1280;
+    var alturaM = 720;
+    var alturaP = 100;
+    var larguraP = 100;
+
+    var alturaN = 100;
+    var larguraN = 100;
+
+    var desloc = 10;
+    var boardTam = 100;
+
+    var yini = (alturaM - boardTam - 100);
+    var yfim = yini + boardTam;
+
+    var fallSpeed = 40;
+
+    var data = 0;
+
+    var types = {
+        a: 100,
+        b: 300,
+        c: 500
+    };
+
+    ctx2.fillRect(0, yini, larguraM, boardTam);
+    ctx.stroke();
+
+    var map = { notas: [] };
+
+    for(let i = 0; i < 20; i++) {
+        map.notas.push(
+            {x: 100, y: 0, time: i * 1000, valid: true},
+            {x: 300, y: 0, time: i * 1500, valid: true},
+            {x: 500, y: 0, time: i * 2000, valid: true},
+        );
+    }
+
+    setInterval(() => {
+        data += 100;
+        document.getElementById("pontuacao").innerHTML = score;  
+        document.getElementById("erros").innerHTML = mistake;  
+        for(let nota of map.notas){
+            if(nota.y != -1) {
+                if(nota.time <= data && nota.y <= alturaM) {
+                    nota.y += fallSpeed;
+                }
+                if(nota.y >= alturaM) {
+                    nota.y = -1;
+                    if(nota.valid == true){
+                        mistake++;
+                    }
+                }
+            }
+        }
+        render();
+    }, 100);
+    
+    function render() {
+        ctx.beginPath();
+        desenharNotas()
+        ctx.stroke();
+    }
+
+    function desenharNotas() {
+        for(let nota of map.notas) {
+            if(nota.time <= data) {
+                let { x, y } = nota;
+                if(y != -1) {
+                    let color;
+                    if(x == 100){
+                        color = "green";
+                    } else if (x == 300) {
+                        color = "red"; 
+                    } else if (x == 500) {
+                        color = "yellow"; 
+                    }
+                    ctx.clearRect(x, y - fallSpeed, alturaN, larguraN);
+                    ctx.fillStyle = color;
+                    if(nota.valid == true) {
+                        ctx.fillRect(x, y, alturaN, larguraN);
+                    }
+                }
+            }
+        }
+    }
+
+    render();
+
+    function validaPontuacao(type) {
+        for(let nota of map.notas) {
+            if(nota.y >= (yini - 100) 
+            && nota.y <= (yfim - 100) 
+            && nota.x == types[type]
+            && nota.valid == true) {
+                score++;
+                nota.valid = false;
+            }
+        }
+    }
+
+    function keyEvent(event) {
+        var key = event.keyCode || event.which;
+
+        // Tecla A
+        if (key == 65) {
+            validaPontuacao("a")
+        }
+        // Tecla B
+        else if (key == 83) {
+            validaPontuacao("b")
+        }
+        // Tecla C
+        else if (key == 68) {
+            validaPontuacao("c")
+        }
+
+        render();
+    }
+</script>
+
+</html>
